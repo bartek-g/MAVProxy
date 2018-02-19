@@ -5,15 +5,18 @@ Andrew Tridgell
 June 2012
 '''
 
-import sys, os, math
 import functools
+import math
+import os
 import time
-from MAVProxy.modules.mavproxy_map import mp_elevation
-from MAVProxy.modules.lib import mp_util
-from MAVProxy.modules.lib import mp_settings
-from MAVProxy.modules.lib import mp_module
-from MAVProxy.modules.lib.mp_menu import *
+
 from pymavlink import mavutil
+
+from MAVProxy.modules.lib import mp_module
+from MAVProxy.modules.lib import mp_settings
+from MAVProxy.modules.lib.mp_menu import *
+from MAVProxy.modules.mavproxy_map import mp_elevation
+
 
 class MapModule(mp_module.MPModule):
     def __init__(self, mpstate):
@@ -55,7 +58,6 @@ class MapModule(mp_module.MPModule):
         service='OviHybrid'
         if 'MAP_SERVICE' in os.environ:
             service = os.environ['MAP_SERVICE']
-        import platform
         from MAVProxy.modules.mavproxy_map import mp_slipmap
         mpstate.map = mp_slipmap.MPSlipMap(service=service, elevation=True, title='Map')
         mpstate.map_functions = { 'draw_lines' : self.draw_lines }
@@ -66,8 +68,12 @@ class MapModule(mp_module.MPModule):
         self.add_completion_function('(MAPSETTING)', self.map_settings.completion)
 
         self.default_popup = MPMenuSubMenu('Popup', items=[])
+        # guided navigation at altitude
         self.add_menu(MPMenuItem('Fly To', 'Fly To', '# guided ',
                                  handler=MPMenuCallTextDialog(title='Altitude (m)', default=100)))
+        # guided loiter with radius
+        self.add_menu(MPMenuItem('Fly To Loiter', 'Fly To Loiter', '# guided_loiter ',
+                                 handler=MPMenuCallTextDialog(title='Radius (m), enter < 0 for CCW', default=20)))
         self.add_menu(MPMenuItem('Set Home', 'Set Home', '# map sethomepos '))
         self.add_menu(MPMenuItem('Set Home (with height)', 'Set Home', '# map sethome '))
         self.add_menu(MPMenuItem('Terrain Check', 'Terrain Check', '# terrain check'))
@@ -103,7 +109,6 @@ class MapModule(mp_module.MPModule):
         from MAVProxy.modules.mavproxy_map import mp_slipmap
         self.default_popup.add(menu)
         self.mpstate.map.add_object(mp_slipmap.SlipDefaultPopup(self.default_popup, combine=True))
-
 
     def show_position(self):
         '''show map position click information'''
