@@ -72,8 +72,11 @@ class MapModule(mp_module.MPModule):
         self.add_menu(MPMenuItem('Fly To', 'Fly To', '# guided ',
                                  handler=MPMenuCallTextDialog(title='Altitude (m)', default=100)))
         # guided loiter with radius
-        self.add_menu(MPMenuItem('Fly To Loiter', 'Fly To Loiter', '# guided_loiter ',
+        self.add_menu(MPMenuItem('Fly To Loiter', 'Fly To Loiter', 'guided_loiter_using_radius',
                                  handler=MPMenuCallTextDialog(title='Radius (m), enter < 0 for CCW', default=20)))
+        self.add_menu(MPMenuItem('Fly To Loiter Fractional', 'Fly To Loiter Fractional', 'guided_loiter_using_turns',
+                                 handler=MPMenuCallTextDialog(title='Turns (n-times >=0)', default="0.0")))
+        self.add_menu(MPMenuSeparator())
         self.add_menu(MPMenuItem('Set Home', 'Set Home', '# map sethomepos '))
         self.add_menu(MPMenuItem('Set Home (with height)', 'Set Home', '# map sethome '))
         self.add_menu(MPMenuItem('Terrain Check', 'Terrain Check', '# terrain check'))
@@ -326,6 +329,19 @@ class MapModule(mp_module.MPModule):
             self.remove_fencepoint(obj.selected[0].objkey, obj.selected[0].extra_info)
         elif menuitem.returnkey == 'popupFenceMove':
             self.move_fencepoint(obj.selected[0].objkey, obj.selected[0].extra_info)
+        elif menuitem.returnkey == 'guided_loiter_using_radius':
+            cmd = 'guided_loiter '
+            if menuitem.handler_result is None:
+                return
+            cmd += menuitem.handler_result
+            self.mpstate.functions.process_stdin(cmd)
+        elif menuitem.returnkey == 'guided_loiter_using_turns':
+            cmd = 'guided_loiter '
+            cmd += '20 '  # default radius in meters
+            if menuitem.handler_result is None:
+                return
+            cmd += menuitem.handler_result  # n-turns
+            self.mpstate.functions.process_stdin(cmd)
         elif menuitem.returnkey == 'showPosition':
             self.show_position()
 
